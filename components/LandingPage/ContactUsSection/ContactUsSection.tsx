@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import ContactForm from "./ContactForm";
 // Removed { FaFacebook } import due to module not found error
 
 const ContactUsSection = () => {
@@ -84,21 +85,11 @@ const ContactUsSection = () => {
             </div>
           </div>
 
-          {/* Google Forms Embed */}
+          {/* Secure contact form (Resend-backed) */}
           <div className="pt-12 pb-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="w-full overflow-hidden rounded-lg">
-                <iframe
-                  src="https://docs.google.com/forms/d/e/1FAIpQLSc5PWfUgYlS0SkRR11pDn99EEo6QWyIovW1UItwVN9P1wVdSA/viewform?embedded=true"
-                  width="100%"
-                  height="823"
-                  frameBorder="0"
-                  marginHeight={0}
-                  marginWidth={0}
-                  className="w-full h-[600px] md:h-[823px]"
-                >
-                  Loading…
-                </iframe>
+            <div className="max-w-3xl mx-auto">
+              <div className="w-full rounded-2xl border border-gray-100 bg-white p-6 shadow-sm md:p-10">
+                <ContactForm />
               </div>
             </div>
           </div>
