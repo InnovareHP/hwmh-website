@@ -1,0 +1,8 @@
+[build]
+  command = "pnpm build"
+  publish = ".next"
+
+# Official runtime: turns Next.js (SSR, server actions, route handlers)
+# into Netlify Functions. Without this the app 404s.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
