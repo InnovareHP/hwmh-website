@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const navItems = [
   { name: "Home", href: "#home" },
@@ -15,27 +15,88 @@ const navItems = [
 const NavigationSection = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // The hash the visitor just clicked. While it is set, the scroll-spy stays
+  // quiet, so the address bar doesn't churn through every section the smooth
+  // scroll passes on the way to the target.
+  const pendingHashRef = useRef<string | null>(null);
+  const pendingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const openMenu = () => setIsMenuOpen(true);
   const closeMenu = () => setIsMenuOpen(false);
 
-  const handleNavClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
-  ) => {
-    if (href.startsWith("#")) {
-      e.preventDefault();
-      const element = document.querySelector(href);
-      if (element) {
-        const offsetTop =
-          element.getBoundingClientRect().top + window.pageYOffset - 80; // 80px offset for sticky nav
-        window.scrollTo({
-          top: offsetTop,
-          behavior: "smooth",
-        });
-      }
-      closeMenu();
-    }
+  // Let the browser handle the jump natively so the #hash lands in the URL
+  // (scroll offset for the fixed nav comes from `scroll-margin-top` in globals.css).
+  const handleNavClick = (href: string) => {
+    pendingHashRef.current = href;
+    if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+    // Safety net: if the target section never reports in (same-section click,
+    // interrupted scroll), don't stay suppressed forever.
+    pendingTimeoutRef.current = setTimeout(() => {
+      pendingHashRef.current = null;
+    }, 1200);
+    closeMenu();
   };
+
+  // Keep the URL hash in sync with the section currently in view, so the
+  // address bar is always a shareable link to what the visitor is reading.
+  useEffect(() => {
+    const sections = navItems
+      .map((item) => document.querySelector<HTMLElement>(item.href))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (sections.length === 0) return;
+
+    // The observer reports every target's state right after observe(). That is
+    // page-load state, not a user scroll, so a clean URL must stay clean until
+    // the visitor actually scrolls. `once` removes the listener after one hit.
+    let userHasScrolled = false;
+    const markScrolled = () => {
+      userHasScrolled = true;
+    };
+    window.addEventListener("scroll", markScrolled, {
+      once: true,
+      passive: true,
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!userHasScrolled) return;
+
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          // the section covering the most of the detection band wins, so the
+          // one actually filling the viewport is the one named in the URL
+          .sort(
+            (a, b) => b.intersectionRect.height - a.intersectionRect.height
+          )[0];
+
+        if (!visible) return;
+
+        const hash = `#${visible.target.id}`;
+
+        // A click is in flight: ignore everything until we land on its target.
+        if (pendingHashRef.current) {
+          if (hash !== pendingHashRef.current) return;
+          pendingHashRef.current = null;
+          if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+        }
+
+        if (hash !== window.location.hash) {
+          // replaceState instead of pushState: no back-button spam while scrolling
+          window.history.replaceState(null, "", hash);
+        }
+      },
+      { rootMargin: "-80px 0px -60% 0px", threshold: 0 }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", markScrolled);
+      if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -58,7 +119,7 @@ const NavigationSection = () => {
             <li key={item.href} className="m-0">
               <Link
                 href={item.href}
-                onClick={(e) => handleNavClick(e, item.href)}
+                onClick={() => handleNavClick(item.href)}
                 className="text-[#0d1216b3] no-underline font-bold text-base font-[Arial,sans-serif] transition-colors duration-300 hover:text-[black]"
               >
                 {item.name}
@@ -125,7 +186,7 @@ const NavigationSection = () => {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  onClick={(e) => handleNavClick(e, item.href)}
+                  onClick={() => handleNavClick(item.href)}
                   className="text-[#4a4a4a] no-underline font-bold text-lg font-[Arial,sans-serif] transition-colors duration-300 hover:text-black block py-2"
                 >
                   {item.name}

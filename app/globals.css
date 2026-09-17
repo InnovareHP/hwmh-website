@@ -23,6 +23,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Offset anchor targets so the fixed nav doesn't cover the section heading */
+section[id] {
+  scroll-margin-top: 80px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
