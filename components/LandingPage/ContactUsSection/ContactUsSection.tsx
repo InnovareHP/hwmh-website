@@ -75,7 +75,7 @@ const ContactUsSection = () => {
                   <FaLinkedin className="w-7 h-7 md:w-8 md:h-8 text-white" />
                 </a>
                 <a
-                  href="https://share.google/MdH7sKPH2pkPcvo7t"
+                  href="https://www.google.com/maps/place/Helping+with+Mom's+Home/data=!4m2!3m1!1s0x0:0x7642fbb0d3c7f0ba?sa=X&ved=1t:2428&hl=en-PH&ictx=111"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-12 h-12 md:w-14 md:h-14 bg-[#eebc51] rounded-lg flex items-center justify-center border-2 border-[#eebc51] hover:opacity-80 transition-opacity"
